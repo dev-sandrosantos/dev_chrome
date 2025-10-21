@@ -10,27 +10,34 @@
   <div class="container">
     <div class="header">
       <h1>Gerador de Senhas</h1>
-      <button id="themeToggle" aria-label="Alternar tema" title="Alternar tema">🌙</button>
+      <div class="header-controls">
+        <div class="font-controls" role="radiogroup" aria-label="Tamanho da fonte">
+          <button class="font-btn" data-size="small" id="fontSmall" role="radio" aria-checked="false" aria-label="Fonte pequena">A-</button>
+          <button class="font-btn" data-size="normal" id="fontNormal" role="radio" aria-checked="true" aria-label="Fonte normal (selecionada)">A</button>
+          <button class="font-btn" data-size="large" id="fontLarge" role="radio" aria-checked="false" aria-label="Fonte grande">A+</button>
+        </div>
+        <button id="themeToggle" aria-label="Alternar tema" title="Alternar tema">🌙</button>
+      </div>
     </div>
 
-    <label for="length">Comprimento: <span id="lengthValue">12</span></label>
-    <input id="length" type="range" min="8" max="16" value="12">
+  <label for="length">Comprimento: <span id="lengthValue">12</span></label>
+  <input id="length" type="range" min="8" max="16" value="12" aria-label="Comprimento da senha">
 
     <div class="checkboxes">
-      <label><input type="checkbox" id="lower" checked> Minúsculas</label>
-      <label><input type="checkbox" id="upper" checked> Maiúsculas</label>
-      <label><input type="checkbox" id="digits" checked> Dígitos</label>
-      <label><input type="checkbox" id="specials" checked> Especiais</label>
+      <label><input type="checkbox" id="lower" checked aria-label="Incluir letras minúsculas"> Minúsculas</label>
+      <label><input type="checkbox" id="upper" checked aria-label="Incluir letras maiúsculas"> Maiúsculas</label>
+      <label><input type="checkbox" id="digits" checked aria-label="Incluir dígitos"> Dígitos</label>
+      <label><input type="checkbox" id="specials" checked aria-label="Incluir caracteres especiais"> Especiais</label>
     </div>
 
     <label for="specialChars">Caracteres especiais permitidos</label>
-  <input id="specialChars" type="text" value="!@#$%&*()[]{}<>?.">
+  <input id="specialChars" type="text" value="!@#$%&*()[]{}<>?." aria-label="Caracteres especiais permitidos">
 
-    <label><input type="checkbox" id="excludeAmbiguous"> Excluir ambíguos (I, l, 0, O)</label>
+    <label><input type="checkbox" id="excludeAmbiguous" aria-label="Excluir caracteres ambíguos"> Excluir ambíguos (I, l, 0, O)</label>
 
     <div class="controls">
-      <button id="generate">Gerar</button>
-      <button id="copy">Copiar</button>
+      <button id="generate" aria-label="Gerar senha">Gerar</button>
+      <button id="copy" aria-label="Copiar senha">Copiar</button>
     </div>
 
     <div id="password" class="password" aria-live="polite"></div>

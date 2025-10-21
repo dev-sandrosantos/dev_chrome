@@ -15,6 +15,41 @@
   const strengthEl = el('strength');
   const messageEl = el('message');
   const themeToggle = el('themeToggle');
+  const fontButtons = Array.from(document.querySelectorAll('.font-btn'));
+
+  function applyFont(size){
+  // aplicar no root (html) para que todo o popup acompanhe a mudança
+  document.documentElement.classList.remove('font-small','font-normal','font-large');
+  document.documentElement.classList.add(size === 'small' ? 'font-small' : size === 'large' ? 'font-large' : 'font-normal');
+    fontButtons.forEach(b=> b.setAttribute('aria-checked', b.dataset.size === size ? 'true' : 'false'));
+    // atualizar aria-labels para refletir o estado
+    fontButtons.forEach(b=>{
+      const labelBase = b.dataset.size === 'small' ? 'Fonte pequena' : b.dataset.size === 'large' ? 'Fonte grande' : 'Fonte normal';
+      b.setAttribute('aria-label', b.dataset.size === size ? labelBase + ' (selecionada)' : labelBase);
+    });
+    localStorage.setItem('fontSize', size);
+    // focus no botão selecionado para feedback de teclado
+    const btn = fontButtons.find(b=> b.dataset.size === size);
+    if (btn) btn.focus();
+  }
+  const savedFont = localStorage.getItem('fontSize') || 'normal';
+  applyFont(savedFont);
+  fontButtons.forEach(b=> b.addEventListener('click', ()=> applyFont(b.dataset.size)));
+  // suporte a navegação por setas no radiogroup
+  const fontGroup = document.querySelector('.font-controls');
+  fontGroup.addEventListener('keydown', (e)=>{
+    const sizes = ['small','normal','large'];
+    const currentIndex = sizes.indexOf(localStorage.getItem('fontSize') || 'normal');
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      const next = sizes[(currentIndex + 1) % sizes.length];
+      applyFont(next);
+      e.preventDefault();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      const prev = sizes[(currentIndex + sizes.length - 1) % sizes.length];
+      applyFont(prev);
+      e.preventDefault();
+    }
+  });
 
   // tema inicial
   function applyTheme(theme){
@@ -86,6 +121,11 @@
   lengthEl.addEventListener('input', ()=>{
     lengthValue.textContent = lengthEl.value;
     validate();
+  });
+
+  // garantir foco inicial para teclado
+  generateBtn.addEventListener('keydown', (e)=>{
+    if (e.key === 'Enter') generateBtn.click();
   });
 
   [lowerEl,upperEl,digitsEl,specialsEl,excludeAmbiguousEl,specialCharsEl].forEach(i=> i.addEventListener('change', validate));
