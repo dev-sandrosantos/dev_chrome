@@ -7,6 +7,8 @@ body{margin:0;padding:0.75rem;background:var(--bg);color:var(--fg);width:20rem;l
 
 /* tema escuro */
 .dark{--bg:#0f1720;--fg:#e6eef8;--muted:#9fb0c8;--accent:#66b2ff}
+/* contraste melhor para labels em tema escuro */
+.dark label{color:#cfe6ff}
 
 .container{display:flex;flex-direction:column;gap:0.5rem;padding:0.5rem}
 h1{font-size:1.05rem;margin:0 0 0.4rem}

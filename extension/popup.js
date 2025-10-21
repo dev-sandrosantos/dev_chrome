@@ -11,6 +11,7 @@
   const excludeAmbiguousEl = el('excludeAmbiguous');
   const generateBtn = el('generate');
   const copyBtn = el('copy');
+  const forceAllEl = el('forceAll');
   const passwordEl = el('password');
   const strengthEl = el('strength');
   const messageEl = el('message');
@@ -66,6 +67,50 @@
     applyTheme(current === 'dark' ? 'light' : 'dark');
   });
 
+  // Persistência de preferências do usuário (length, opções e specialChars)
+  function savePreferences(){
+    const prefs = {
+      length: Number(lengthEl.value),
+      lower: !!lowerEl.checked,
+      upper: !!upperEl.checked,
+      digits: !!digitsEl.checked,
+      specials: !!specialsEl.checked,
+      specialChars: specialCharsEl.value || '',
+      excludeAmbiguous: !!excludeAmbiguousEl.checked
+      ,forceAll: !!forceAllEl && !!forceAllEl.checked
+    };
+    localStorage.setItem('prefs', JSON.stringify(prefs));
+  }
+
+  function loadPreferences(){
+    try{
+      const raw = localStorage.getItem('prefs');
+      if (!raw) return;
+      const p = JSON.parse(raw);
+      if (p.length) { lengthEl.value = p.length; lengthValue.textContent = p.length; }
+      lowerEl.checked = !!p.lower;
+      upperEl.checked = !!p.upper;
+      digitsEl.checked = !!p.digits;
+      specialsEl.checked = !!p.specials;
+      specialCharsEl.value = p.specialChars || '';
+      excludeAmbiguousEl.checked = !!p.excludeAmbiguous;
+      forceAllEl.checked = !!p.forceAll;
+    }catch(e){
+      console.warn('Falha ao carregar preferências', e);
+    }
+  }
+
+  // salvar preferências em mudanças relevantes
+  [lengthEl, lowerEl, upperEl, digitsEl, specialsEl, specialCharsEl, excludeAmbiguousEl].forEach(inp=>{
+    inp.addEventListener('change', ()=>{ savePreferences(); validate(); });
+    inp.addEventListener('input', ()=>{ savePreferences(); validate(); });
+  });
+  // forceAll persistence
+  forceAllEl.addEventListener('change', ()=>{ savePreferences(); });
+
+  // carregar preferências antes da validação inicial
+  loadPreferences();
+
   const AMBIGUOUS = 'Il0O';
 
   function buildAllowed() {
@@ -108,10 +153,19 @@
       generateBtn.disabled = true;
       return false;
     }
-    if (!allowed || allowed.length === 0){
-      messageEl.textContent = 'Selecione ao menos uma categoria de caracteres.';
-      generateBtn.disabled = true;
-      return false;
+    if (forceAllEl && forceAllEl.checked) {
+      // forceAll exige que exista ao menos um caractere em cada categoria
+      if (!specialCharsEl.value || specialCharsEl.value.length === 0) {
+        messageEl.textContent = 'Para garantir 1 de cada categoria é necessário definir caracteres especiais.';
+        generateBtn.disabled = true;
+        return false;
+      }
+    } else {
+      if (!allowed || allowed.length === 0){
+        messageEl.textContent = 'Selecione ao menos uma categoria de caracteres.';
+        generateBtn.disabled = true;
+        return false;
+      }
     }
     messageEl.textContent = '';
     generateBtn.disabled = false;
@@ -135,62 +189,137 @@
     const len = Number(lengthEl.value);
     const allowed = buildAllowed();
     let pwd = '';
-    // regra especial: quando comprimento for 8, forçar ao menos 1 maiúscula e 1 especial (se selecionadas)
-    if (len === 8) {
-      const needUpper = upperEl.checked;
-      const needSpecial = specialsEl.checked && (specialCharsEl.value || '').length > 0;
-      if (needUpper || needSpecial) {
-        // construir arrays de caracteres por categoria
-        const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-        const specialsChars = (specialCharsEl.value || '').split('');
-        // prepare result array
-        const res = new Array(len);
-        const usedPositions = new Set();
+    // Se forceAll estiver ativo, garantir pelo menos 1 de cada categoria (minúscula, maiúscula, dígito, especial)
+    if (forceAllEl && forceAllEl.checked) {
+      // construir conjuntos por categoria
+      const lowers = 'abcdefghijklmnopqrstuvwxyz'.split('');
+      const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+      const digits = '0123456789'.split('');
+      const specialsChars = (specialCharsEl.value || '').split('');
 
-        // helper para sortear posição livre
-        function randPos() {
-          const buf = new Uint32Array(1);
-          crypto.getRandomValues(buf);
-          let p = buf[0] % len;
-          // buscar posição livre
-          for (let i = 0; i < len; i++) {
-            const idx = (p + i) % len;
-            if (!usedPositions.has(idx)) return idx;
+      // validar que há caracteres suficientes
+      if (lowers.length === 0 || uppers.length === 0 || digits.length === 0 || specialsChars.length === 0) {
+        messageEl.textContent = 'Não é possível garantir 1 de cada categoria: conjuntos incompletos.';
+        return;
+      }
+
+      // posição para cada categoria
+      const res = new Array(len);
+      const usedPositions = new Set();
+
+      function randPosFree() {
+        const buf = new Uint32Array(1); crypto.getRandomValues(buf);
+        let p = buf[0] % len;
+        for (let i = 0; i < len; i++) {
+          const idx = (p + i) % len;
+          if (!usedPositions.has(idx)) return idx;
+        }
+        for (let i = 0; i < len; i++) if (!usedPositions.has(i)) return i;
+        return 0;
+      }
+
+      // selecionar um de cada categoria
+  // pick positions sequentially per category
+  usedPositions.clear();
+      // lower
+      const pLower = randPosFree(); usedPositions.add(pLower);
+      const bufL = new Uint32Array(1); crypto.getRandomValues(bufL);
+      res[pLower] = lowers[bufL[0] % lowers.length];
+      // upper
+      const pUpper = randPosFree(); usedPositions.add(pUpper);
+      const bufU = new Uint32Array(1); crypto.getRandomValues(bufU);
+      res[pUpper] = uppers[bufU[0] % uppers.length];
+      // digit
+      const pDigit = randPosFree(); usedPositions.add(pDigit);
+      const bufD = new Uint32Array(1); crypto.getRandomValues(bufD);
+      res[pDigit] = digits[bufD[0] % digits.length];
+      // special
+      const pSpecial = randPosFree(); usedPositions.add(pSpecial);
+      const bufS = new Uint32Array(1); crypto.getRandomValues(bufS);
+      res[pSpecial] = specialsChars[bufS[0] % specialsChars.length];
+
+      // construir conjunto permitido para preencher o resto (respeitando excludeAmbiguous)
+      let fillAllowed = lowers.join('') + uppers.join('') + digits.join('') + specialsChars.join('');
+      if (excludeAmbiguousEl.checked) {
+        const AMB = 'Il0O';
+        fillAllowed = fillAllowed.split('').filter(c => !AMB.includes(c)).join('');
+      }
+      if (!fillAllowed || fillAllowed.length === 0) {
+        messageEl.textContent = 'Conjunto de preenchimento inválido.';
+        return;
+      }
+
+      // preencher posições restantes
+      const remaining = [];
+      for (let i = 0; i < len; i++) if (!usedPositions.has(i)) remaining.push(i);
+      if (remaining.length > 0) {
+        const rand = new Uint32Array(remaining.length);
+        crypto.getRandomValues(rand);
+        for (let i = 0; i < remaining.length; i++) {
+          const ch = fillAllowed.charAt(rand[i] % fillAllowed.length);
+          res[remaining[i]] = ch;
+        }
+      }
+      pwd = res.join('');
+    } else {
+      // comportamento anterior
+      // regra especial: quando comprimento for 8, forçar ao menos 1 maiúscula e 1 especial (se selecionadas)
+      if (len === 8) {
+        const needUpper = upperEl.checked;
+        const needSpecial = specialsEl.checked && (specialCharsEl.value || '').length > 0;
+        if (needUpper || needSpecial) {
+          // construir arrays de caracteres por categoria
+          const uppers = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+          const specialsChars = (specialCharsEl.value || '').split('');
+          // prepare result array
+          const res = new Array(len);
+          const usedPositions = new Set();
+
+          // helper para sortear posição livre
+          function randPos() {
+            const buf = new Uint32Array(1);
+            crypto.getRandomValues(buf);
+            let p = buf[0] % len;
+            // buscar posição livre
+            for (let i = 0; i < len; i++) {
+              const idx = (p + i) % len;
+              if (!usedPositions.has(idx)) return idx;
+            }
+            // fallback
+            for (let i = 0; i < len; i++) if (!usedPositions.has(i)) return i;
+            return 0;
           }
-          // fallback
-          for (let i = 0; i < len; i++) if (!usedPositions.has(i)) return i;
-          return 0;
-        }
 
-        if (needUpper) {
-          const p = randPos(); usedPositions.add(p);
-          const buf = new Uint32Array(1); crypto.getRandomValues(buf);
-          res[p] = uppers[buf[0] % uppers.length];
-        }
-        if (needSpecial) {
-          const p = randPos(); usedPositions.add(p);
-          const buf = new Uint32Array(1); crypto.getRandomValues(buf);
-          res[p] = specialsChars[buf[0] % specialsChars.length];
-        }
-
-        // preencher posições restantes com caracteres aleatórios do conjunto permitido
-        const remainingPositions = [];
-        for (let i = 0; i < len; i++) if (!usedPositions.has(i)) remainingPositions.push(i);
-        if (remainingPositions.length > 0) {
-          const rand = new Uint32Array(remainingPositions.length);
-          crypto.getRandomValues(rand);
-          for (let i = 0; i < remainingPositions.length; i++) {
-            const pos = remainingPositions[i];
-            const ch = allowed.charAt(rand[i] % allowed.length);
-            res[pos] = ch;
+          if (needUpper) {
+            const p = randPos(); usedPositions.add(p);
+            const buf = new Uint32Array(1); crypto.getRandomValues(buf);
+            res[p] = uppers[buf[0] % uppers.length];
           }
+          if (needSpecial) {
+            const p = randPos(); usedPositions.add(p);
+            const buf = new Uint32Array(1); crypto.getRandomValues(buf);
+            res[p] = specialsChars[buf[0] % specialsChars.length];
+          }
+
+          // preencher posições restantes com caracteres aleatórios do conjunto permitido
+          const remainingPositions = [];
+          for (let i = 0; i < len; i++) if (!usedPositions.has(i)) remainingPositions.push(i);
+          if (remainingPositions.length > 0) {
+            const rand = new Uint32Array(remainingPositions.length);
+            crypto.getRandomValues(rand);
+            for (let i = 0; i < remainingPositions.length; i++) {
+              const pos = remainingPositions[i];
+              const ch = allowed.charAt(rand[i] % allowed.length);
+              res[pos] = ch;
+            }
+          }
+          pwd = res.join('');
+        } else {
+          pwd = generatePassword(len, allowed);
         }
-        pwd = res.join('');
       } else {
         pwd = generatePassword(len, allowed);
       }
-    } else {
-      pwd = generatePassword(len, allowed);
     }
     passwordEl.textContent = pwd;
     strengthEl.textContent = 'Força: ' + calcStrength(pwd);
