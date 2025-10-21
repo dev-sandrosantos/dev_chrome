@@ -14,6 +14,22 @@
   const passwordEl = el('password');
   const strengthEl = el('strength');
   const messageEl = el('message');
+  const themeToggle = el('themeToggle');
+
+  // tema inicial
+  function applyTheme(theme){
+    if (theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('theme', theme);
+  }
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  applyTheme(savedTheme);
+
+  themeToggle.addEventListener('click', ()=>{
+    const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
 
   const AMBIGUOUS = 'Il0O';
 
