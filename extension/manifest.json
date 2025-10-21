@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Gerador de Senhas Simples",
+  "version": "0.1.0",
+  "description": "Extensão que gera senhas seguras usando Web Crypto API.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Gerador de Senhas"
+  },
+  "permissions": ["clipboardWrite"],
+  "icons": {
+    "48": "icon48.svg",
+    "128": "icon128.svg"
+  }
+}

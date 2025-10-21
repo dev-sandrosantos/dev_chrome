@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gerador de Senhas</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Gerador de Senhas</h1>
+
+    <label for="length">Comprimento: <span id="lengthValue">12</span></label>
+    <input id="length" type="range" min="8" max="16" value="12">
+
+    <div class="checkboxes">
+      <label><input type="checkbox" id="lower" checked> Minúsculas</label>
+      <label><input type="checkbox" id="upper" checked> Maiúsculas</label>
+      <label><input type="checkbox" id="digits" checked> Dígitos</label>
+      <label><input type="checkbox" id="specials" checked> Especiais</label>
+    </div>
+
+    <label for="specialChars">Caracteres especiais permitidos</label>
+  <input id="specialChars" type="text" value="!@#$%&*()[]{}<>?.">
+
+    <label><input type="checkbox" id="excludeAmbiguous"> Excluir ambíguos (I, l, 0, O)</label>
+
+    <div class="controls">
+      <button id="generate">Gerar</button>
+      <button id="copy">Copiar</button>
+    </div>
+
+    <div id="password" class="password" aria-live="polite"></div>
+    <div id="strength" class="strength"></div>
+    <div id="message" class="message" role="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
