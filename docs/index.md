@@ -89,13 +89,14 @@ Checklist para Pull Requests (pequeno)
 - [ ] Preferências persistidas e restauradas corretamente.
 - [ ] Não foram introduzidas chamadas de rede ou persistência de senhas.
 
-Notas finais e próximos passos
-----------------------------
+Documentação adicional
+----------------------
 
-- Adicionar testes automatizados (Jest) para `generatePassword` e um fluxo E2E com Playwright + axe para testes de acessibilidade seria o próximo passo natural.
-- Se quiser sincronizar preferências entre dispositivos, usar `chrome.storage.sync` é possível, mas exige considerar quotas e permissões.
+- `docs/features/generation.md` — especifica a feature de geração de senhas: contrato, regras de segurança e testes recomendados.
+- `docs/features/ui.md` — descreve a UI do popup, componentes, roles ARIA e comportamento esperado.
+- `docs/features/persistence.md` — explica o formato das preferências (localStorage) e boas práticas para persistência.
+- `docs/features/accessibility.md` — guia de acessibilidade e verificações automáticas (axe, Lighthouse).
+- `docs/features/testing.md` — plano mínimo de testes (unitários e E2E) e sugestões de scripts.
+- `docs/STRUCTURE.md` — exemplo de estrutura de pastas do projeto e recomendações para organização.
+- `ARCHITECTURE.md` — visão geral da arquitetura, separação de responsabilidades e boas práticas para este projeto.
 
-Se precisar, eu posso abrir PRs com:
-- testes unitários para `generatePassword`;
-- integração Playwright + axe para validar a a11y;
-- configuração de CI (GitHub Actions) que rode lint + testes.
