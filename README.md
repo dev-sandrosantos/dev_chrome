@@ -19,8 +19,4 @@ Dicas rápidas para contribuir
 - Sempre prefira `crypto.getRandomValues` para aleatoriedade nas senhas.
 - Teste manualmente mudanças de UI no popup (prefira testes automatizados quando possível).
 
-Próximos passos recomendados
----------------------------
-- Adicionar testes unitários para `generatePassword`.
-- Configurar CI (GitHub Actions) com lint e testes.
-- Adicionar E2E com Playwright + axe para validar acessibilidade.
+

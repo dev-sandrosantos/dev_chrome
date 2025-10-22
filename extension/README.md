@@ -16,7 +16,3 @@ Notas de segurança:
 - A extensão NÃO grava senhas em storage.
 - Usa `crypto.getRandomValues` para entropia forte.
 
-Próximos passos sugeridos:
-- Adicionar ícones `icon48.png` e `icon128.png`.
-- Implementar testes unitários para `generatePassword`.
-- Ajustes de acessibilidade e internacionalização.
